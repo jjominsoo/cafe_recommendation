@@ -7,8 +7,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 # --- [페이지 설정 및 스타일] ---
 st.set_page_config(page_title="Cafe Finder Pro", layout="wide") # 넓은 화면 사용
 
-NAVER_CLIENT_ID = "h5Boba0NG1huDKOpvL6O" # 발급받은 ID 입력
-NAVER_CLIENT_SECRET = "4vslkqoNEF" # 발급받은 Secret 입력
+NAVER_CLIENT_ID = st.secrets["NAVER_CLIENT_ID"] # 발급받은 ID 입력
+NAVER_CLIENT_SECRET = st.secrets["NAVER_CLIENT_SECRET"] # 발급받은 Secret 입력
 
 # CSS: 선택된 버튼과 일반 버튼을 시각적으로 구분
 st.markdown("""
