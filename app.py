@@ -7,24 +7,33 @@ from sklearn.metrics.pairwise import cosine_similarity
 # --- [페이지 설정 및 스타일] ---
 st.set_page_config(page_title="Cafe Finder Pro", layout="wide") # 넓은 화면 사용
 
-NAVER_CLIENT_ID = st.secrets["NAVER_CLIENT_ID"] # 발급받은 ID 입력
-NAVER_CLIENT_SECRET = st.secrets["NAVER_CLIENT_SECRET"] # 발급받은 Secret 입력
 
+# NAVER_CLIENT_ID = st.secrets["NAVER_CLIENT_ID"] # 발급받은 ID 입력
+# NAVER_CLIENT_SECRET = st.secrets["NAVER_CLIENT_SECRET"] # 발급받은 Secret 입력
+NAVER_CLIENT_ID = "h5Boba0NG1huDKOpvL6O" # 발급받은 ID 입력
+NAVER_CLIENT_SECRET = "4vslkqoNEF" # 발급받은 Secret 입력
 # CSS: 선택된 버튼과 일반 버튼을 시각적으로 구분
-st.markdown("""
+st.markdown("""     
     <style>
+    /* 전체 여백 줄이기 */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 0rem !important;
+        max-width: 95% !important;
+    }
     /* 기본 버튼 스타일 */
     div.stButton > button {
         width: 100% !important;
-        height: 120px !important; 
-        margin-bottom: 15px;
-        border-radius: 18px !important;
-        font-size: 24px !important;
-        font-weight: bold;
+        height: 80px !important;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s ease;
+        text-align: center;
+        white-space: pre-wrap !important;
+        line-height: 1.2 !important;
+        border-radius: 15px !important;
+        font-size: 16px !important;
     }
     /* 마우스를 올렸을 때 */
     div.stButton > button:hover {
@@ -41,7 +50,7 @@ st.markdown("""
     }
     /* 선택된 버튼 (Primary 타입) 스타일 */
     div.stButton > button[kind="primary"] {
-        border: 4px solid #ff4b4b !important;
+        border: 3px solid #ff4b4b !important;
         color: #ff4b4b !important;
         background-color: #fff5f5 !important;
     }
@@ -53,19 +62,42 @@ st.markdown("""
     }
     /* 이미지 카드 스타일 */
     .cafe-img {
-        border-radius: 15px;
-        width: 100%;
-        height: 300px;
+        border-radius: 10px;
+        width: 50%;
+        height: 200px;
         object-fit: cover;
         margin-bottom: 15px;
     }
     /* 결과 페이지 상세 정보 카드 */
     .detail-card {
         background-color: #f8f9fa;
-        padding: 25px;
-        border-radius: 20px;
+        padding: 15px;
+        border-radius: 15px;
         border-left: 5px solid #ff4b4b;
+        font-size: 0.9rem;
     }
+            
+    /* 팝업 내부 이미지 스타일 */
+    .popup-img {
+        border-radius: 15px;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+    }
+
+    /* 상세 설명 텍스트 박스 */
+    .popup-desc {
+        background-color: #f0f2f6;
+        padding: 20px;
+        border-radius: 15px;
+        height: 100%;
+    }
+            
+    /* 헤더 여백 조절 */
+    h1 { font-size: 2rem !important; padding-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem !important; }
+    h3 { font-size: 1.2rem !important; }
+                 
     </style>
     """, unsafe_allow_html=True)
 
@@ -86,6 +118,7 @@ def get_naver_info(query):
         "X-Naver-Client-Id": NAVER_CLIENT_ID,
         "X-Naver-Client-Secret": NAVER_CLIENT_SECRET
     }
+    
     params = {"query": query, "display": 1}
     res = requests.get(url, headers=headers, params=params)
     if res.status_code == 200:
@@ -143,6 +176,31 @@ pc_map = {
     35: {'pos': ['party'], 'neg': ['concept', 'present', 'pet', 'alcohol_alone']},
     36: {'pos': ['parking', 'dessert', 'present', 'cozy'], 'neg': ['package']}
 }
+
+# --- [상세 정보 팝업 함수] ---
+@st.dialog("카페 상세 정보", width="large")
+def show_cafe_detail(cafe_name):
+    info = get_naver_info(cafe_name)
+    img_url = get_naver_image(cafe_name)
+    
+    if info:
+        title = info['title'].replace('<b>', '').replace('</b>', '')
+        col_img, col_txt = st.columns([1, 1]) # 5:5 분할
+        
+        with col_img:
+            if img_url:
+                st.image(img_url, use_container_width=True)
+            else:
+                st.info("이미지를 불러올 수 없습니다.")
+        
+        with col_txt:
+            st.markdown(f"### {title}")
+            st.markdown(f"**📍 주소**\n{info['address']}")
+            st.markdown(f"**🏢 분류**\n{info['category']}")
+            st.write("---")
+            st.link_button("🗺️ 네이버 지도에서 보기", f"https://map.naver.com/v5/search/{cafe_name}")
+    else:
+        st.error("정보를 찾을 수 없습니다.")
 
 # --- [SESSION STATE] ---
 if 'step' not in st.session_state:
